@@ -29,17 +29,12 @@ var spritzjs = require('spritzjs')();
 import message from './protobuf/message_pb.js';
 import LoginMsg from './protobuf/test_pb';
 
-import { getDHPublicKey, longToByteArray } from './DHKey.js';
 var BigNumber = require('bignumber.js');
-
-var ByteBuffer = require('byte-buffer');
-import {MsgID} from './api.js';
-
-//var net = require('net');
-//var net = require('net');
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 var net = require('react-native-tcp');
+import netcore from './network/NetCore';
+
 
 class RNRc4 extends Component {
 
@@ -47,57 +42,49 @@ class RNRc4 extends Component {
     super(props);
 
 
-      //var server = net.createServer(function(socket) {
-      //    socket.write('excellent!');
-      //}).listen(12345);
-
-      var seed = getDHPublicKey();
-
-      var client = net.createConnection({host:'192.168.0.162', port:8888}, ()=> {
-          console.log("--------create connection succeed!");
-
-          var login_msg = new LoginMsg.Login();
-          login_msg.setSeed(5);
-
-          var data = login_msg.serializeBinary();
-
-          //var req_rc4_msg = new message.ExchangeKeyReq;
-          //req_rc4_msg.setSeed(2);
-          //
-          //var data = req_rc4_msg.serializeBinary();
-          //alert(data.length);
-          //client.write(data);
-          alert(data.length);
-
-          var buff = new ByteBuffer(2 + 1 + data.length);
-          buff.writeUnsignedShort(1 + data.length);
-          buff.writeUnsignedByte(MsgID.CMD_REQ_RC4_KEY);
-          buff.write(data);
-
-          // 凤爪干活呢
-          var buffers = new Uint8Array(buff.buffer);
-          alert(buffers);
-          client.write(buffers);
-
-          client.on('error', function(error) {
-              console.log(">>>>>>>>>error:" + error);
-          });
-
-          client.on('data', function(data) {
-              console.log('message was received', data)
-          });
+      netcore.createConnection({host:'192.168.0.162', port:8888}, ()=>{
+          netcore.handler.ReqRC4Key();
       });
 
 
-      //var client = net.createConnection(12345);
+      //var server = net.createServer(function(socket) {
+      //    socket.write('excellent!');
+      //}).listen(12345);
       //
-      //client.on('error', function(error) {
-      //    console.log(error)
-      //});
+      //var client = net.createConnection({host:'192.168.0.162', port:8888}, ()=> {
+      //    console.log("--------create connection succeed!");
       //
-      //client.on('data', function(data) {
-      //    console.log('message was received', data)
+      //
+      //
+      //    //var req_rc4_msg = new message.ExchangeKeyReq;
+      //    //req_rc4_msg.setSeed(2);
+      //    //
+      //    //var data = req_rc4_msg.serializeBinary();
+      //    //alert(data.length);
+      //    //client.write(data);
+      //    //alert(data.length);
+      //
+      //    //var buff = new ByteBuffer(2 + 1 + data.length);
+      //    //buff.writeUnsignedShort(1 + data.length);
+      //    //buff.writeUnsignedByte(MsgID.CMD_REQ_RC4_KEY);
+      //    //buff.write(data);
+      //    //
+      //    //// 凤爪干活呢
+      //    //var buffers = new Uint8Array(buff.buffer);
+      //    //alert(buffers);
+      //    //client.write(buffers);
+      //
+      //
+      //
+      //    client.on('error', function(error) {
+      //        console.log(">>>>>>>>>error:" + error);
+      //    });
+      //
+      //    client.on('data', function(data) {
+      //        console.log('message was received', data)
+      //    });
       //});
+
 
       //
       ////net.createConnection({host:'192.168.0.155', port: 8888}, () => {

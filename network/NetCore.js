@@ -1,19 +1,20 @@
 /**
  * Created by tzt on 6/26/16.
  */
-import { getDHPublicKey, longToByteArray } from './DHKey.js';
 import {MsgID} from './api.js';
 var ByteBuffer = require('byte-buffer');
 var net = require('react-native-tcp');
 
 import NetHandle from "./NetHandle";
 
-var public_key = getDHPublicKey();
+import netcore from './NetCore';
+
+
 var client = null;
 
 NetCore = {}
 
-NetCore.handler = new NetHandle();
+NetCore.msg = new NetHandle();
 
 // @param options {host:'192.168.0.162', port:8888}
 // @param cb callback
@@ -30,7 +31,7 @@ NetCore.createConnection = function(options, cb) {
         });
 
         client.on('data', function(data) {
-            console.log('message was received', data)
+            NetCore._processMsg(data);
         });
     });
 }
@@ -38,20 +39,40 @@ NetCore.createConnection = function(options, cb) {
 // @param msg 消息结构体, 必须为
 // @param msg_id 消息ID
 // @parm client 客户端
-NetCore.sendMsg = function(msg, msg_id) {
+// @parm encrypt 加密
+NetCore.sendMsg = function(msg_id, msg, encrypt) {
+    if (encrypt === null) {
+        encrypt = true;
+    }
+
     var data = msg.serializeBinary();
 
     //alert(data.length);
 
-    var buff = new ByteBuffer(2 + 1 + data.length);
-    buff.writeUnsignedShort(1 + data.length);
-    buff.writeUnsignedByte(msg_id);
+    var buff = new ByteBuffer(2 + 2 + data.length);
+    buff.writeUnsignedShort(2 + data.length);
+    buff.writeUnsignedShort(msg_id);
     buff.write(data);
 
     // 封装BUFF
     var buffers = new Uint8Array(buff.buffer);
-    alert(buffers);
     client.write(buffers);
 }
+
+// 处理服务器返回的消息
+// @param data 服务器反馈的数据
+NetCore._processMsg = function(data) {
+    var buff = new ByteBuffer(data);
+    var len = buff.readUnsignedShort();
+    var id = buff.readUnsignedShort();
+
+    console.log('message was received! id:' + id + " len:" + (len-2) + " data:" + data);
+
+    // 获得消息源数据
+    var data = buff.read();
+    netcore.msg.ParseAck(id, data.raw);
+}
+
+
 
 export default NetCore;
